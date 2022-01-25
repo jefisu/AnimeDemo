@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jefisu.animedemo.data.dto.AnimePost
+import com.jefisu.animedemo.data.dto.toFormat
 import com.jefisu.animedemo.data.repository.AnimeRepository
 import com.jefisu.animedemo.data.util.Resource
 import com.jefisu.animedemo.data.util.UiEvent
@@ -40,24 +41,24 @@ class MainViewModel @Inject constructor(
         when (event) {
             is MainEvent.GetAnime -> {
                 viewModelScope.launch {
-                   repository.getAnimes()
-                       .onEach { event ->
-                           when(event) {
-                               is Resource.Success -> {
-                                   _state.value = state.value.copy(
-                                       animes = event.data ?: emptyList(),
-                                       isLoading = false
-                                   )
-                               }
-                               is Resource.Error -> {
-                                   _eventFlow.emit(
-                                       UiEvent.ShowSnackBar(
-                                           message = event.uiText ?: "Erro desconhecido"
-                                       )
-                                   )
-                               }
-                           }
-                       }.launchIn(this)
+                    repository.getAnimes()
+                        .onEach { event ->
+                            when (event) {
+                                is Resource.Success -> {
+                                    _state.value = state.value.copy(
+                                        animes = event.data ?: emptyList(),
+                                        isLoading = false
+                                    )
+                                }
+                                is Resource.Error -> {
+                                    _eventFlow.emit(
+                                        UiEvent.ShowSnackBar(
+                                            message = event.uiText ?: "Erro desconhecido"
+                                        )
+                                    )
+                                }
+                            }
+                        }.launchIn(this)
                 }
             }
             is MainEvent.SaveAnime -> {
@@ -65,7 +66,13 @@ class MainViewModel @Inject constructor(
                     if (name.isBlank()) {
                         _eventFlow.emit(UiEvent.ShowSnackBar("Preechimento obrigatório do campo"))
                     } else {
-                        val result = repository.insertAnime(AnimePost(name))
+                        val result = repository.insertAnime(
+                            AnimePost(
+                                name = name,
+                                timestamp = System.currentTimeMillis().toFormat("HH:mm"),
+                                date = System.currentTimeMillis().toFormat("MM/dd/yyyy")
+                            )
+                        )
                         when (result) {
                             is Resource.Success -> {
                                 _eventFlow.emit(UiEvent.AddedDeletedAnime)

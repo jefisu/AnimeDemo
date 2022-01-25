@@ -68,6 +68,8 @@ fun MainScreen(
                                 navigator.navigate(
                                     EditScreenDestination(
                                         name = anime.name,
+                                        timestamp = anime.timestamp,
+                                        date = anime.date,
                                         id = anime.id
                                     )
                                 )

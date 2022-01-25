@@ -5,5 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class AnimeResponse(
     val name: String,
+    val timestamp: String,
+    val date: String,
     val id: String,
 )

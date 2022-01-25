@@ -7,6 +7,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jefisu.animedemo.data.dto.AnimeResponse
+import com.jefisu.animedemo.data.dto.toFormat
 import com.jefisu.animedemo.data.repository.AnimeRepository
 import com.jefisu.animedemo.data.util.Resource
 import com.jefisu.animedemo.data.util.UiEvent
@@ -14,6 +15,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import java.util.*
 import javax.inject.Inject
 
 @HiltViewModel
@@ -53,6 +55,8 @@ class EditViewModel @Inject constructor(
                         repository.updateAnime(
                             AnimeResponse(
                                 name = name.text,
+                                timestamp = System.currentTimeMillis().toFormat("HH:mm"),
+                                date = System.currentTimeMillis().toFormat("MM/dd/yyyy"),
                                 id = it.id
                             )
                         )

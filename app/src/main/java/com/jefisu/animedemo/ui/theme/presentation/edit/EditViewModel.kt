@@ -51,13 +51,14 @@ class EditViewModel @Inject constructor(
         when (event) {
             is EditEvent.SaveNewData -> {
                 viewModelScope.launch {
-                    val result = _currentAnime?.let {
+                    val result = _currentAnime?.let { anime ->
                         repository.updateAnime(
                             AnimeResponse(
                                 name = name.text,
-                                timestamp = System.currentTimeMillis().toFormat("HH:mm"),
-                                date = System.currentTimeMillis().toFormat("MM/dd/yyyy"),
-                                id = it.id
+                                timestamp = anime.timestamp,
+                                date = anime.date,
+                                lastModify = System.currentTimeMillis().toFormat("MM/dd/yyyy - HH:mm"),
+                                id = anime.id
                             )
                         )
                     }

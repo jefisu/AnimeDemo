@@ -8,9 +8,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface AnimeRepository {
 
-    suspend fun insertAnime(anime: AnimePost): Resource<Boolean>
-
-    suspend fun updateAnime(anime: AnimeResponse): Resource<Boolean>
+    suspend fun insertAnime(newAnime: AnimePost?, updateAnime: AnimeResponse?): Resource<Boolean>
 
     suspend fun getAnimeById(id: String): AnimeResponse?
 

@@ -12,15 +12,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.jefisu.animedemo.data.dto.AnimeResponse
-import com.jefisu.animedemo.data.util.UiEvent
+import com.jefisu.animedemo.data.dto.model.Identify
 import com.jefisu.animedemo.ui.theme.LocalSpacing
 import com.jefisu.animedemo.ui.theme.presentation.edit.components.TransparentHintTextField
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.flow.collect
 
-@Destination(navArgsDelegate = AnimeResponse::class)
+@Destination(navArgsDelegate = Identify::class)
 @Composable
 fun EditScreen(
     navigator: DestinationsNavigator,
@@ -32,14 +31,12 @@ fun EditScreen(
     LaunchedEffect(key1 = true) {
         viewModel.eventFlow.collect { event ->
             when (event) {
-                is UiEvent.ShowSnackBar -> {
+                is EditViewModel.UiEvent.ShowSnackBar -> {
                     scaffoldState.snackbarHostState.showSnackbar(
                         message = event.message
                     )
                 }
-                is UiEvent.UpdatedAnime -> {
-                    navigator.navigateUp()
-                }
+                is EditViewModel.UiEvent.AddUpdateAnime -> navigator.navigateUp()
             }
         }
     }
@@ -48,7 +45,7 @@ fun EditScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    viewModel.onEvent(EditEvent.SaveNewData)
+                    viewModel.onEvent(EditEvent.SaveAnime)
                 }
             ) {
                 Icon(

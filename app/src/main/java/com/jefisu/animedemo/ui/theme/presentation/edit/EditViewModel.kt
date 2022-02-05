@@ -6,16 +6,15 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jefisu.animedemo.data.dto.AnimePost
 import com.jefisu.animedemo.data.dto.AnimeResponse
 import com.jefisu.animedemo.data.dto.toFormat
 import com.jefisu.animedemo.data.repository.AnimeRepository
 import com.jefisu.animedemo.data.util.Resource
-import com.jefisu.animedemo.data.util.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
-import java.util.*
 import javax.inject.Inject
 
 @HiltViewModel
@@ -24,7 +23,7 @@ class EditViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    var name by mutableStateOf(TextFieldState())
+    var name by mutableStateOf(TextFieldState(hint = "Enter title"))
         private set
 
     private val _eventFlow = MutableSharedFlow<UiEvent>()
@@ -38,9 +37,10 @@ class EditViewModel @Inject constructor(
             viewModelScope.launch {
                 val anime = repository.getAnimeById(id)
                 _currentAnime = anime
-                _currentAnime?.let { anime ->
+                _currentAnime?.let {
                     name = name.copy(
-                        text = anime.name
+                        text = it.name,
+                        isHintVisible = false
                     )
                 }
             }
@@ -49,29 +49,59 @@ class EditViewModel @Inject constructor(
 
     fun onEvent(event: EditEvent) {
         when (event) {
-            is EditEvent.SaveNewData -> {
+            is EditEvent.SaveAnime -> {
                 viewModelScope.launch {
-                    val result = _currentAnime?.let { anime ->
-                        repository.updateAnime(
-                            AnimeResponse(
-                                name = name.text,
-                                timestamp = anime.timestamp,
-                                date = anime.date,
-                                lastModify = System.currentTimeMillis().toFormat("MM/dd/yyyy - HH:mm"),
-                                id = anime.id
-                            )
-                        )
-                    }
-                    when (result) {
-                        is Resource.Success -> {
-                            _eventFlow.emit(UiEvent.UpdatedAnime)
-                        }
-                        is Resource.Error -> {
-                            _eventFlow.emit(
-                                UiEvent.ShowSnackBar(
-                                    message = result.uiText ?: "Erro ao atualizar"
+                    val anime = _currentAnime
+                    if (anime != null) {
+                        _currentAnime?.let {
+                            val result = repository.insertAnime(
+                                newAnime = null,
+                                updateAnime = AnimeResponse(
+                                    name = name.text,
+                                    timestamp = it.timestamp,
+                                    date = it.date,
+                                    lastModify = System.currentTimeMillis()
+                                        .toFormat("MM/dd/yyyy - HH/mm"),
+                                    id = it.id
                                 )
                             )
+                            when (result) {
+                                is Resource.Success -> {
+                                    _eventFlow.emit(UiEvent.AddUpdateAnime)
+                                }
+                                is Resource.Error -> {
+                                    _eventFlow.emit(
+                                        UiEvent.ShowSnackBar(
+                                            message = result.uiText ?: "Erro ao inserir"
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        if (name.text.isBlank()) {
+                            _eventFlow.emit(UiEvent.ShowSnackBar("Preechimento obrigatório do campo"))
+                        } else {
+                            val result = repository.insertAnime(
+                                newAnime = AnimePost(
+                                    name = name.text,
+                                    timestamp =  System.currentTimeMillis().toFormat("HH:mm"),
+                                    date =  System.currentTimeMillis().toFormat("MM/dd/yyyy")
+                                ),
+                                updateAnime = null
+                            )
+                            when (result) {
+                                is Resource.Success -> {
+                                    _eventFlow.emit(UiEvent.AddUpdateAnime)
+                                }
+                                is Resource.Error -> {
+                                    _eventFlow.emit(
+                                        UiEvent.ShowSnackBar(
+                                            message = result.uiText ?: "Erro ao inserir"
+                                        )
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -85,5 +115,10 @@ class EditViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    sealed class UiEvent {
+        data class ShowSnackBar(val message: String) : UiEvent()
+        object AddUpdateAnime: UiEvent()
     }
 }

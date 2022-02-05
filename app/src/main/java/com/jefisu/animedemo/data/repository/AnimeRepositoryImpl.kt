@@ -12,11 +12,16 @@ class AnimeRepositoryImpl(
     private val service: AnimeService
 ) : AnimeRepository {
 
-    override suspend fun insertAnime(anime: AnimePost): Resource<Boolean> {
+    override suspend fun insertAnime(
+        newAnime: AnimePost?,
+        updateAnime: AnimeResponse?
+    ): Resource<Boolean> {
         return try {
-            Resource.Success(
-                service.insertAnime(anime)
-            )
+            if (updateAnime != null) {
+                Resource.Success(service.updateAnime(updateAnime))
+            } else {
+                Resource.Success(service.insertAnime(newAnime))
+            }
         } catch (e: RedirectResponseException) {
             Resource.Error(
                 uiText = e.message.toString(),
@@ -28,29 +33,6 @@ class AnimeRepositoryImpl(
         } catch (e: ServerResponseException) {
             Resource.Error(
                 uiText = e.message.toString(),
-            )
-        }
-    }
-
-    override suspend fun updateAnime(anime: AnimeResponse): Resource<Boolean> {
-        return try {
-            Resource.Success(
-                service.updateAnime(anime)
-            )
-        } catch (e: RedirectResponseException) {
-            Resource.Error(
-                uiText = e.message.toString(),
-                data = false
-            )
-        } catch (e: ClientRequestException) {
-            Resource.Error(
-                uiText = e.message,
-                data = false
-            )
-        } catch (e: ServerResponseException) {
-            Resource.Error(
-                uiText = e.message.toString(),
-                data = false
             )
         }
     }

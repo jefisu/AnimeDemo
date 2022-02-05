@@ -6,11 +6,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jefisu.animedemo.data.dto.AnimePost
-import com.jefisu.animedemo.data.dto.toFormat
 import com.jefisu.animedemo.data.repository.AnimeRepository
 import com.jefisu.animedemo.data.util.Resource
-import com.jefisu.animedemo.data.util.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -61,40 +58,11 @@ class MainViewModel @Inject constructor(
                         }.launchIn(this)
                 }
             }
-            is MainEvent.SaveAnime -> {
-                viewModelScope.launch {
-                    if (name.isBlank()) {
-                        _eventFlow.emit(UiEvent.ShowSnackBar("Preechimento obrigatório do campo"))
-                    } else {
-                        val result = repository.insertAnime(
-                            AnimePost(
-                                name = name,
-                                timestamp = System.currentTimeMillis().toFormat("HH:mm"),
-                                date = System.currentTimeMillis().toFormat("MM/dd/yyyy")
-                            )
-                        )
-                        when (result) {
-                            is Resource.Success -> {
-                                _eventFlow.emit(UiEvent.AddedDeletedAnime)
-                            }
-                            is Resource.Error -> {
-                                _eventFlow.emit(
-                                    UiEvent.ShowSnackBar(
-                                        result.uiText ?: "Erro desconhecido"
-                                    )
-                                )
-                            }
-                        }
-                        name = ""
-                    }
-                }
-            }
             is MainEvent.DeleteAnime -> {
                 viewModelScope.launch {
-                    val result = repository.deleteAnime(event.anime)
-                    when (result) {
+                    when (val result = repository.deleteAnime(event.anime)) {
                         is Resource.Success -> {
-                            _eventFlow.emit(UiEvent.AddedDeletedAnime)
+                            _eventFlow.emit(UiEvent.DeleteAnime)
                         }
                         is Resource.Error -> {
                             _eventFlow.emit(
@@ -106,7 +74,11 @@ class MainViewModel @Inject constructor(
                     }
                 }
             }
-            is MainEvent.ChangeValueName -> name = event.name
         }
+    }
+
+    sealed class UiEvent {
+        data class ShowSnackBar(val message: String) : UiEvent()
+        object DeleteAnime : UiEvent()
     }
 }

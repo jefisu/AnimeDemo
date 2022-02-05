@@ -6,7 +6,7 @@ import com.jefisu.animedemo.data.util.SimpleResource
 
 interface AnimeService {
 
-    suspend fun insertAnime(anime: AnimePost): Boolean
+    suspend fun insertAnime(anime: AnimePost?): Boolean
 
     suspend fun updateAnime(anime: AnimeResponse): Boolean
 

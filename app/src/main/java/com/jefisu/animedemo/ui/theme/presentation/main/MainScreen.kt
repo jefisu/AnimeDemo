@@ -1,5 +1,6 @@
 package com.jefisu.animedemo.ui.theme.presentation.main
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -7,23 +8,25 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.jefisu.animedemo.data.util.UiEvent
 import com.jefisu.animedemo.ui.theme.LocalSpacing
 import com.jefisu.animedemo.ui.theme.presentation.destinations.EditScreenDestination
+import com.jefisu.animedemo.ui.theme.presentation.main.components.Item
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.flow.collect
 
-@Destination(
-    start = true
-)
+@Destination(start = true)
 @Composable
 fun MainScreen(
     navigator: DestinationsNavigator,
@@ -39,12 +42,12 @@ fun MainScreen(
     LaunchedEffect(key1 = true) {
         viewModel.eventFlow.collect { event ->
             when (event) {
-                is UiEvent.ShowSnackBar -> {
+                is MainViewModel.UiEvent.ShowSnackBar -> {
                     scaffoldState.snackbarHostState.showSnackbar(
                         message = event.message
                     )
                 }
-                is UiEvent.AddedDeletedAnime -> {
+                is MainViewModel.UiEvent.DeleteAnime -> {
                     viewModel.onEvent(MainEvent.GetAnime)
                 }
             }
@@ -52,61 +55,49 @@ fun MainScreen(
     }
     Scaffold(
         scaffoldState = scaffoldState,
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(space.small)
+        modifier = Modifier.fillMaxSize(),
+        floatingActionButton = {
+            FloatingActionButton(onClick = { navigator.navigate(EditScreenDestination()) }) {
+                Icon(imageVector = Icons.Default.AddCircle, contentDescription = "")
+            }
+        }
     ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            LazyColumn(modifier = Modifier.weight(1f)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(space.medium)
+        ) {
+            Text(
+                text = "Anilist",
+                fontSize = 48.sp,
+                letterSpacing = 2.sp,
+                fontStyle = FontStyle.Italic,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(space.medium))
+            LazyColumn {
                 items(state.animes) { anime ->
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                    Item(
+                        name = anime.name,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(space.medium)
+                            .clip(RoundedCornerShape(space.medium))
+                            .border(
+                                width = 1.dp,
+                                color = Color.Black,
+                                shape = RoundedCornerShape(space.medium)
+                            )
                             .clickable {
                                 navigator.navigate(
-                                    EditScreenDestination(
-                                        name = anime.name,
-                                        timestamp = anime.timestamp,
-                                        date = anime.date,
-                                        id = anime.id
-                                    )
+                                    EditScreenDestination(id = anime.id)
                                 )
-                            }
-                    ) {
-                        Text(text = anime.name, style = MaterialTheme.typography.h4)
-                        IconButton(onClick = {
+                            },
+                        onDeleteClick = {
                             viewModel.onEvent(MainEvent.DeleteAnime(anime))
-                        }) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = "Delete",
-                                modifier = Modifier.size(35.dp)
-                            )
                         }
-                    }
-                }
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(space.small),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                TextField(
-                    value = viewModel.name,
-                    onValueChange = { viewModel.onEvent(MainEvent.ChangeValueName(it)) },
-                    placeholder = { Text(text = "Write name here...") },
-                    shape = RoundedCornerShape(space.medium),
-                    singleLine = true
-                )
-                IconButton(onClick = { viewModel.onEvent(MainEvent.SaveAnime) }) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add",
-                        modifier = Modifier.size(35.dp)
                     )
+                    Spacer(modifier = Modifier.height(12.dp))
                 }
             }
         }

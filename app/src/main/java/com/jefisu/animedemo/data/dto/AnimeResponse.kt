@@ -8,5 +8,5 @@ data class AnimeResponse(
     val timestamp: String,
     val date: String,
     val lastModify: String?,
-    val id: String,
+    val id: String?,
 )

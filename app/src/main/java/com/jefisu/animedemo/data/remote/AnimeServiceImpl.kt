@@ -10,10 +10,12 @@ class AnimeServiceImpl(
     private val client: HttpClient
 ) : AnimeService {
 
-    override suspend fun insertAnime(anime: AnimePost): Boolean {
+    override suspend fun insertAnime(anime: AnimePost?): Boolean {
        return client.post {
            url("http://192.168.0.2:8080/api/anime")
-           body = anime
+           anime?.let {
+               body = it
+           }
        }
     }
 
